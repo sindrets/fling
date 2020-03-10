@@ -98,7 +98,7 @@ public class TestRunner {
     }
 
     private void processClass(String classpath, Path filePath) throws ClassNotFoundException, IOException {
-        String packagePath = Path.of(classpath).relativize(filePath).toString();
+        String packagePath = Paths.get(classpath).relativize(filePath).toString();
         packagePath = packagePath.replaceAll("\\" + File.separator, ".").replaceAll("\\.class$", "");
         // System.out.println("FOUND CLASS: " + packagePath);
 

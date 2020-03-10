@@ -13,8 +13,8 @@ public class Passing {
 
     @TestGroup(description = "Class property tests")
     public void testSomeClassProperties(TestInitiator suite) {
-        suite.it("getPackageName() returns correct package").expect(this.getClass().getPackageName())
-                .toBe("no.stide.mock");
+        suite.it("getCanonicalName() returns correct name").expect(this.getClass().getCanonicalName())
+                .toBe("no.stide.mock.Passing");
         System.out.println("Foo bar baz");
         suite.it("should have 1 declared constructor").expect(this.getClass().getDeclaredConstructors().length).toBe(1);
     }

@@ -2,14 +2,14 @@ package no.stide.fling;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Main {
 
     public static boolean debugMode = false;
-    static HashMap<String, String> flags;
+    static LinkedHashMap<String, String> flags;
     static ArrayList<String> params;
 
     public static boolean isFlag(String param) {
@@ -20,7 +20,7 @@ public class Main {
     }
 
     public static void parseFlags(String[] args) {
-        final HashMap<String, String> flags = new HashMap<>();
+        final LinkedHashMap<String, String> flags = new LinkedHashMap<>();
         final ArrayList<String> params = new ArrayList<>();
         final Pattern letterFlag = Pattern.compile("(?<=^-)[a-zA-Z]+$");
         final Pattern wordFlag = Pattern.compile("(?<=^--)[a-zA-Z][a-zA-Z\\d]+$");

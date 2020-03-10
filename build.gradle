@@ -5,7 +5,7 @@ plugins {
 }
 
 def mainClass = "no.stide.fling.Main"
-project.version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     flatDir {
@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     // implementation fileTree('libs') { include '*.jar' }
-    implementation ":jchalk-1.0.0"
+    implementation ":jchalk-1.0.1"
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.0'
 }
@@ -40,7 +40,7 @@ sourceSets {
 task runMockTests(type: Exec) {
     dependsOn shadowJar
     workingDir "$rootDir"
-    commandLine "java", "-jar", "build/libs/fling-${project.version}.jar", "build/classes/java/test"
+    commandLine "java", "-jar", "build/libs/fling-${version}.jar", "build/classes/java/test"
     ignoreExitValue true
 }
 
