@@ -10,7 +10,6 @@ public class TestInitiator {
     }
 
     public TestExpector it(String description) {
-        TestSuite.totalTestCount++;
         TestCase test = new TestCase(description);
         this.parent.addTest(test);
         return test;

@@ -7,7 +7,6 @@ public class Throws {
 
     @TestGroup(description = "Test throw assertion")
     public void throwTest(TestInitiator suite) {
-        
         suite.it("should throw RuntimeException").expect(() -> {
             throw new RuntimeException();
         }).toThrow(Exception.class);

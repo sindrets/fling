@@ -23,4 +23,13 @@ public class TestRunnerTest {
             testRunner.run();
         });
     }
+
+    @Test public void testUnexpected() {
+        TestRunner testRunner = new TestRunner(new String[] { "build/classes/java/test" });
+        testRunner.setIncludes("**/mock/UnexpectedEx*");
+        Assertions.assertThrows(TestFailedException.class, () -> {
+            testRunner.run();
+        });
+        Assertions.assertEquals(testRunner.getUnitTest().getTotalNonSuccessExits(), 3);
+    }
 }

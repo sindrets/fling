@@ -6,14 +6,13 @@ import java.util.ArrayList;
 import no.stide.jchalk.Chalk;
 
 public class TestSuite {
-    protected static int totalTestCount = 0;
-    protected static int totalPassCount = 0;
     private final static Chalk chalk = new Chalk();
     private int suitePassCount = 0;
     private String classPath;
     private String description;
     private TestFunction testFn;
     private ArrayList<TestCase> tests = new ArrayList<>();
+    private ExitStatus exitStatus = ExitStatus.EXIT_SUCCESS;
 
     public TestSuite(String description, TestFunction fn) {
         this.description = description;
@@ -24,6 +23,11 @@ public class TestSuite {
         this.classPath = classPath;
         this.description = description;
         this.testFn = fn;
+    }
+
+    protected TestSuite(String classPath, String description) {
+        this.classPath = classPath;
+        this.description = description;
     }
 
     public void run() {
@@ -48,11 +52,6 @@ public class TestSuite {
         this.printSummary();
     }
 
-    public static void resetTestCounters() {
-        TestSuite.totalTestCount = 0;
-        TestSuite.totalPassCount = 0;
-    }
-
     public void printSummary() {
         String s = this.hasPassedTests() ? chalk.green().apply("✓") : chalk.red().apply("✗");
         System.out.println(
@@ -61,25 +60,16 @@ public class TestSuite {
         );
     }
 
-    public static void printFullSummary() {
-        String s = hasPassedAllTests() ? chalk.green().apply("✓") : chalk.red().apply("✗");
-        System.out.println(
-            "\n" + s + " " + chalk.bold().underline().apply(
-                "Full test summary: Passed " + TestSuite.totalPassCount + " out of " + TestSuite.totalTestCount + " tests."
-            ) + "\n"
-        );
-    }
-
     protected void addTest(TestCase test) {
         this.tests.add(test);
     }
 
-    public static int getTotalTestCount() {
-        return TestSuite.totalTestCount;
+    protected void setTestFn(TestFunction testFn) {
+        this.testFn = testFn;
     }
 
-    public static int getTotalPassCount() {
-        return TestSuite.totalPassCount;
+    public int getTestCount() {
+        return tests.size();
     }
 
     public int getTestPassCount() {
@@ -104,16 +94,20 @@ public class TestSuite {
         return this.description;
     }
 
-    public static boolean hasPassedAllTests() {
-        return TestSuite.totalPassCount == TestSuite.totalTestCount;
-    }
-
     public String getClassPath() {
         return this.classPath;
     }
 
     public boolean hasPassedTests() {
-        return this.suitePassCount == this.tests.size();
+        return this.exitStatus == ExitStatus.EXIT_SUCCESS && suitePassCount == this.tests.size();
+    }
+
+    public ExitStatus getExitStatus() {
+        return exitStatus;
+    }
+
+    public void setExitStatus(ExitStatus exitStatus) {
+        this.exitStatus = exitStatus;
     }
 
     @Override
@@ -129,6 +123,9 @@ public class TestSuite {
     public String toString(TestStatus filter) {
         String s = chalk.blue().bold().apply(classPath) + "\n"
             + "  " + description + "\n";
+        if (exitStatus != ExitStatus.EXIT_SUCCESS) {
+            s += Util.indent(chalk.red().apply("Exit code: " + exitStatus.ordinal()), 4) + "\n";
+        }
         for (TestCase test : getTests(filter)) {
             s += Util.indent(test.toString(), 4) + "\n";
         }

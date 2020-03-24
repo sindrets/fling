@@ -40,7 +40,6 @@ public class TestCase implements TestExpector, CompareExpector, ProcedureExpecto
         boolean isEqual = expectation == null || actual == null ? actual == expectation : actual.equals(expectation);
         if (isEqual && !not || !isEqual && not) {
             this.status = TestStatus.PASSED;
-            TestSuite.totalPassCount++;
             return true;
         }
         this.status = TestStatus.FAILED;
@@ -54,14 +53,12 @@ public class TestCase implements TestExpector, CompareExpector, ProcedureExpecto
             ((Procedure)actual).invoke();
             if (not) {
                 this.status = TestStatus.PASSED;
-                TestSuite.totalPassCount++;
                 return true;
             }
         } catch (Throwable e) {
             boolean isEqual = expectation.isInstance(e);
             if (isEqual && !not || !isEqual && not) {
                 this.status = TestStatus.PASSED;
-                TestSuite.totalPassCount++;
                 return true;
             }
         }

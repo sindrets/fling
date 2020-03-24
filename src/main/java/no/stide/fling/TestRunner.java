@@ -27,7 +27,7 @@ public class TestRunner {
     private String[] classpaths;
     private ArrayList<String> exclude = new ArrayList<>();
     private ArrayList<String> include = new ArrayList<>();
-    private ArrayList<TestSuite> testSuites = new ArrayList<>();
+    private UnitTest unitTest = new UnitTest();
     private TestStatus testStatus = TestStatus.NOT_STARTED;
 
     public TestRunner(String[] classpaths) {
@@ -35,8 +35,6 @@ public class TestRunner {
     }
 
     public void run() throws TestFailedException {
-
-        TestSuite.resetTestCounters();
 
         PathMatcher[] excludeMatchers = new PathMatcher[exclude.size()];
         for (int i = 0; i < this.exclude.size(); i++) {
@@ -84,7 +82,7 @@ public class TestRunner {
             }
         }
 
-        this.testStatus = TestSuite.hasPassedAllTests() ? TestStatus.PASSED : TestStatus.FAILED;
+        this.testStatus = unitTest.hasPassedAllTests() ? TestStatus.PASSED : TestStatus.FAILED;
 
         try {
             fullTestSummary();
@@ -109,25 +107,17 @@ public class TestRunner {
         Method[] methods = clazz.getDeclaredMethods();
 
         Object instance = null;
-        a: for (Method m : methods) {
+        for (Method m : methods) {
             Annotation[] annotations = m.getAnnotations();
             for (Annotation annotation : annotations) {
                 if (annotation.annotationType().equals(TestGroup.class)) {
                     try {
                         Type[] paramTypes = m.getGenericParameterTypes();
-                        if (paramTypes.length < 1 || !(paramTypes[0] instanceof Class
-                                && (Class<?>) paramTypes[0] == TestInitiator.class)) {
-                            System.err.println(chalk.red()
-                                    .apply("\n[ERROR] Method " + getMethodLocation(m)
-                                            + " has the wrong signature! Expected one parameter of type '"
-                                            + TestInitiator.class.getCanonicalName() + "'."));
-                            continue a;
-                        }
                         if (instance == null) {
                             System.out.println("Running tests in " + chalk.blue().bold().apply(packagePath) + "...\n");
                             instance = clazz.getConstructor().newInstance();
                         }
-                        processMethod(packagePath, instance, m, annotation);
+                        processMethod(packagePath, instance, m, annotation, paramTypes);
                     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                             | InvocationTargetException | NoSuchMethodException | SecurityException e) {
                         e.printStackTrace();
@@ -138,21 +128,40 @@ public class TestRunner {
         cl.close();
     }
 
-    private void processMethod(String classPath, Object instance, Method method, Annotation annotation) {
+    private void processMethod(String classPath, Object instance, Method method, Annotation annotation, Type[] paramTypes) {
         String description = ((TestGroup) annotation).description();
         final Object self = instance;
-        TestSuite suite = new TestSuite(classPath, description, (TestInitiator ti) -> {
+        TestSuite suite = new TestSuite(classPath, description);
+        suite.setTestFn((TestInitiator ti) -> {
+            if (paramTypes.length != 1 || paramTypes.length == 1 && 
+                    !(paramTypes[0] instanceof Class && (Class<?>) paramTypes[0] == TestInitiator.class)) {
+                System.out.println(chalk.red().apply(
+                    "\n[ERROR] Method " + getMethodLocation(method)
+                    + " has the wrong signature! Expected one parameter of type '"
+                    + TestInitiator.class.getCanonicalName() + "'.")
+                );
+                suite.setExitStatus(ExitStatus.EXIT_FAILURE);
+                return;
+            }
             try {
                 method.invoke(self, ti);
             } catch (IllegalAccessException e) {
-                System.err.println(chalk.red().apply("\n[ERROR] Can't access method " + getMethodLocation(method)
+                System.out.println(chalk.red().apply("\n[ERROR] Can't access method " + getMethodLocation(method)
                         + "! Did you forget to make it public?\n"));
-                System.err.println(chalk.blackBright().apply(Util.getStackTrace(e)));
-            } catch (IllegalArgumentException | InvocationTargetException e) {
+                System.out.println(chalk.blackBright().apply(Util.getStackTrace(e)));
+                suite.setExitStatus(ExitStatus.EXIT_FAILURE);
+            } catch (InvocationTargetException e) {
+                System.out.println(chalk.red().apply(
+                    "\n[ERROR] Test method threw an unexpected exception: " 
+                    + getMethodLocation(method)
+                ));
+                System.out.println(chalk.blackBright().apply(Util.getStackTrace(e.getCause())));
+                suite.setExitStatus(ExitStatus.EXIT_FAILURE);
+            } catch (IllegalArgumentException e) {
                 e.printStackTrace();
             }
         });
-        this.testSuites.add(suite);
+        this.unitTest.addTestSuite(suite);
 
         ByteArrayOutputStream out = Util.pushOutStack();
         suite.run();
@@ -166,6 +175,10 @@ public class TestRunner {
 
     public TestStatus getTestStatus() {
         return this.testStatus;
+    }
+
+    public UnitTest getUnitTest() {
+        return unitTest;
     }
 
     public void setClassPaths(String[] classpaths) {
@@ -193,10 +206,10 @@ public class TestRunner {
             throw new TestNotStartedException();
         }
 
-        TestSuite.printFullSummary();
-        if (!TestSuite.hasPassedAllTests()) {
+        unitTest.printFullSummary();
+        if (!unitTest.hasPassedAllTests()) {
             System.out.println(chalk.bgCyan().black().bold().apply(" Failed tests: "));
-            for (TestSuite suite : this.testSuites) {
+            for (TestSuite suite : this.unitTest.getTestSuites()) {
                 if (!suite.hasPassedTests()) {
                     System.out.println(Util.indent(suite.toString(TestStatus.FAILED), 4));
                 }
