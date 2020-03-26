@@ -51,7 +51,10 @@ public class TestRunner {
 
         for (String classpath : this.classpaths) {
             try {
-                Files.walk(Paths.get(classpath)).filter(Files::isRegularFile).forEach(path -> {
+                Files.walk(Paths.get(classpath)).filter(Files::isRegularFile).forEach((Path path) -> {
+                    if (!path.toString().endsWith(".class")) {
+                        return;
+                    }
                     try {
                         Boolean process = false;
                         for (PathMatcher pm : includeMatchers) {
