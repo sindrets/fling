@@ -9,6 +9,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
@@ -25,6 +26,7 @@ public class TestRunner {
 
     static final Chalk chalk = new Chalk();
     private String[] classpaths;
+    private URL[] classpathUrls;
     private ArrayList<String> exclude = new ArrayList<>();
     private ArrayList<String> include = new ArrayList<>();
     private UnitTest unitTest = new UnitTest();
@@ -32,6 +34,15 @@ public class TestRunner {
 
     public TestRunner(String[] classpaths) {
         this.classpaths = classpaths;
+        this.classpathUrls = new URL[classpaths.length];
+        for (int i = 0; i < classpaths.length; i++) {
+            try {
+                this.classpathUrls[i] = new File(classpaths[i]).toURI().toURL();
+            } catch (MalformedURLException e) {
+                System.err.println("Malformed classpath! '" + this.classpaths[i] + "'");
+                System.exit(1);
+            }
+        }
     }
 
     public void run() throws TestFailedException {
@@ -103,8 +114,7 @@ public class TestRunner {
         packagePath = packagePath.replaceAll("\\" + File.separator, ".").replaceAll("\\.class$", "");
         // System.out.println("FOUND CLASS: " + packagePath);
 
-        URL classPathUrl = new File(classpath).toURI().toURL();
-        URLClassLoader cl = new URLClassLoader(new URL[] { classPathUrl });
+        URLClassLoader cl = new URLClassLoader(this.classpathUrls);
 
         Class<?> clazz = cl.loadClass(packagePath);
         Method[] methods = clazz.getDeclaredMethods();

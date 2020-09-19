@@ -86,7 +86,7 @@ public class Main {
 
         String[] includes = flags.containsKey("include") ? flags.get("include").split(":|;") : new String[0];
         String[] excludes = flags.containsKey("exclude") ? flags.get("exclude").split(":|;") : new String[0];
-        TestRunner testRunner = new TestRunner(params.toArray(new String[params.size()]));
+        TestRunner testRunner = new TestRunner(params.get(0).split(":|;"));
         testRunner.setIncludes(includes);
         testRunner.setExcludes(excludes);
         try {
