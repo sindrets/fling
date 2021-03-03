@@ -1,0 +1,8 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "lib/*.jar"
+    ],
+    "java.format.settings.url": "eclipse-formatter.xml"
+}
+

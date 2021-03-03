@@ -1,10 +1,9 @@
-
-.gradle
-.vscode
-.settings
-.classpath
-.project
-
-# build files
-bin
+# Compiled output
 build
+
+# Misc
+.settings/
+.project
+.directory
+notes.md
+.vim/Session.vim

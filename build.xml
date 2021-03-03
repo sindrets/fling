@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<project name="fling" default="build">
+
+    <property name="project.name" value="fling" />
+    <property name="project.version" value="1.2.0" />
+
+    <target name="clean" description="Remove all generated files">
+        <delete dir="build" />
+    </target>
+
+    <target name="compile" description="Compile the program">
+        <mkdir dir="build/classes/main" />
+        <javac
+            srcdir="src/main"
+            destdir="build/classes/main"
+            compiler="modern"
+            target="8"
+            source="8"
+            encoding="utf8"
+            debug="on"
+            debuglevel="lines,vars,source"
+            includeantruntime="false">
+            <classpath>
+                <fileset dir="lib" includes="*.jar" excludes="*sources.jar"/>
+            </classpath>
+            <compilerarg value="-Xlint" />
+            <compilerarg value="-Xdiags:verbose" />
+        </javac>
+    </target>
+
+    <target name="compile-test" description="Compile the tests" depends="compile">
+        <mkdir dir="build/classes/test" />
+        <javac
+            srcdir="src/test"
+            destdir="build/classes/test"
+            encoding="utf8"
+            debug="on"
+            debuglevel="lines,vars,source" 
+            includeantruntime="false">
+            <classpath>
+                <pathelement path="build/classes/main"/>
+                <fileset dir="lib" includes="*.jar" excludes="*sources.jar"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile" description="Create a jar">
+        <jar destfile="build/artifacts/fling-${project.version}.jar">
+            <zipgroupfileset dir="lib" includes="jchalk*.jar" excludes="*sources.jar"/>
+            <fileset dir="build/classes/main" includes="**/*.class" />
+            <manifest>
+                <attribute name="Main-Class" value="io.github.sindrets.fling.Main" />
+                <attribute name="Implementation-Title" value="${project.name}" />
+                <attribute name="Implementation-Version" value="${project.version}" />
+            </manifest>
+        </jar>
+        <jar destfile="build/artifacts/fling-${project.version}-sources.jar">
+            <fileset dir="src/main" includes="**/*.java" />
+            <manifest>
+                <attribute name="Main-Class" value="io.github.sindrets.fling.Main" />
+                <attribute name="Implementation-Title" value="${project.name}" />
+                <attribute name="Implementation-Version" value="${project.version}" />
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="zip" description="Create a zip">
+        <delete file="build/artifacts/fling-${project.version}.zip"/>
+        <mkdir dir="build/artifacts" />
+        <zip destfile="build/artifacts/fling-${project.version}.zip">
+            <zipfileset dir=".">
+                <exclude name="build/**"/>
+            </zipfileset>
+        </zip>
+    </target>
+
+    <target name="watch">
+        <exec executable="sh">
+            <arg value="-c"/>
+            <arg value="while sleep 1; do find src -path '*.java' | entr -ds 'ant jar'; done"/>
+        </exec>
+    </target>
+
+    <target name="test" depends="compile-test" description="Run tests">
+        <java jar="bin/fling-1.2.0.jar" failonerror="true" fork="true">
+            <arg value="build/classes/main:build/classes/test:lib/jchalk-1.1.0.jar"/>
+            <arg value="--exclude=**/mock/*" />
+            <arg value="--loglevel=3" />
+        </java>
+    </target>
+
+    <target name="build" depends="jar,test" />
+</project>
